@@ -14,6 +14,14 @@ from tkinter import ttk
 from google.cloud import vision
 
 import io
+
+### IoT dependencies
+# from flask import Flask, render_template,request, redirect, url_for
+from pyduino import *
+import time
+
+
+
 #
 """
 from flask_sqlalchemy import SQLAlchemy
@@ -50,6 +58,7 @@ def my_link():
     heartRateNeutralStart=80
     heartRateNeutralEnd=100
     heartRateDummyValue=110
+    
     #EMOTIONS and their corresponding FRAGRANCES
     angryFragrance="rose"
     happyFragrance="lavender"
@@ -66,6 +75,9 @@ def my_link():
     Harvey="citrus"
     Emile="rose"
     
+    CLIENT_ID = ''
+    CLIENT_SECRET = ''
+
     values_dict={'angry': 'angry','happy': 'happy','surprised': 'surprised','sad': 'sad'}
         
     question= request.form['questionnaire']
@@ -74,8 +86,8 @@ def my_link():
     print("question =",question)
    # ********************GOOGLE VISION*************************************
     
-    #to create a file and clear pre-data
-    open('pri.txt', 'w').close()
+    #open('pri.txt', 'w').close()
+
    
     # four basic emotions that are provided by google vision
     emo = ['Angry', 'Surprised','Sad', 'Happy']
@@ -312,23 +324,6 @@ def my_link():
         heartBeat="above"
     else:
         heartBeat="neutral"
-    """
-    #The value user entered in textbox is assigned to a variable
-    question= request.form['questionnaire']
-    userName= request.form['userName']
-    new_user_name=request.form['new_user_name']
-    prefferedFragrance=request.form['Preffered_fragrance']
-    print(new_user_name)
-    print(prefferedFragrance)
-
-    class User(db.Model):
-    name=db.Column(db.String(20),primary_key=True)
-    prefferedFragrance=db.Column(db.String(10))
-    db.create_all()
-    user=User(name='Sophieeee',prefferedFragrance='lavender')
-    db.session.add(user)
-    db.session.commit()
-    """
     for emotion, value in values_dict.items(): 
         print(emotion," = ",value)
         if (value=="VERY_LIKELY"): #1st branch of algorithm-one emotion is VERY_LIKELY
@@ -430,7 +425,7 @@ def my_link():
                     elif(question=="sad"):
                         FinalEmotion="sad"
     #prints final emotion in the terminal
-    #print(f'Final Emotion={FinalEmotion}')
+    print(f'Final Emotion={FinalEmotion}')
     #Pop up window displays result
     popup = tk.Tk()
     popup.wm_title("Result")
@@ -464,6 +459,55 @@ def my_link():
     B1.pack()
     popup.mainloop()
     #Retains and displays the web page
+    
+    #arduino code starts
+    # initialize connection to Arduino
+    # if your arduino was running on a serial port other than '/dev/ttyACM0/'
+    # declare: a = Arduino(serial_port='/dev/ttyXXXX')
+    a = Arduino() 
+    time.sleep(3)
+
+    # declare the pins we're using
+    LED_PIN = 50
+    ANALOG_PIN = 0
+    emotion = 50
+    # initialize the digital pin as output
+    a.set_pin_mode(emotion,'O')
+    print('Arduino initialized')
+
+        # if we make a post request on the webpage aka press button then do stuff
+        # if request.method == 'POST':
+            # if we press the turn on button
+            
+            # print("emotion =", emotion)
+    # if request.form['submit'] == 'start' :
+    #     # emotion = FinalEmotion
+    if FinalEmotion == "angry":
+        emotion = 42  ##enter the pin assigned
+    elif FinalEmotion == "happy":
+        emotion = 50 ##enter the pin assigned
+    elif FinalEmotion == "sad":
+        emotion = 48 ##enter the pin assigned
+    elif FinalEmotion == "calm":
+        emotion = 46 ##enter the pin assigned
+    elif FinalEmotion == "surprised":
+        emotion = 44  ##enter the pin assigned
+    else:
+        emotion = 46  ##enter the pin assigned
+        
+    print('TURN ON')
+    try:
+        #turn off the LED on arduino
+        for i in range(0,100):
+            a.digital_write(i,0)
+        # turn on LED on arduino
+        print("emotion inside catch type =", type(emotion))
+        print("emotion inside catch value =", emotion)
+        # a.set_pin_mode(emotion,'O')
+        a.digital_write(emotion,1)
+    except :   
+            print("already entered")
+
     
     return (''), 204
 
